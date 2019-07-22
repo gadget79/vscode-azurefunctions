@@ -14,8 +14,8 @@ import { localize } from "../localize";
 import { getCliFeedAppSettings } from '../utils/getCliFeedJson';
 import { nonNullProp } from '../utils/nonNull';
 import { convertStringToRuntime, getFunctionsWorkerRuntime, getWorkspaceSetting, getWorkspaceSettingFromAnyFolder, updateGlobalSetting } from '../vsCodeConfig/settings';
-import { isLocalTreeItem } from './localProject/LocalTreeItem';
 import { ProductionSlotTreeItem } from './ProductionSlotTreeItem';
+import { isProjectCV, isRemoteProjectCV } from './projectContextValues';
 
 export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public readonly childTypeLabel: string = localize('azFunc.FunctionApp', 'Function App in Azure');
@@ -56,7 +56,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             async (site: WebSiteManagementModels.Site) => {
                 const siteClient: SiteClient = new SiteClient(site, this.root);
                 if (siteClient.isFunctionApp) {
-                    return new ProductionSlotTreeItem(this, siteClient);
+                    return new ProductionSlotTreeItem(this, siteClient, site);
                 }
                 return undefined;
             },
@@ -154,11 +154,11 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         }
 
         const site: WebSiteManagementModels.Site = nonNullProp(wizardContext, 'site');
-        return new ProductionSlotTreeItem(this, new SiteClient(site, this.root));
+        return new ProductionSlotTreeItem(this, new SiteClient(site, this.root), site);
     }
 
     public isAncestorOfImpl(contextValue: string | RegExp): boolean {
-        return !isLocalTreeItem(contextValue);
+        return !isProjectCV(contextValue) || isRemoteProjectCV(contextValue);
     }
 }
 
